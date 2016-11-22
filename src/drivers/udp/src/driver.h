@@ -50,6 +50,7 @@ class TDriver {
   bool hysteresis(bool lastout, double in, double hyst);
 
   // Per robot global data
+  t3Dd off;  // middle of start line
   int mDrvPath;
   int prev_mDrvPath;
   enum {PATH_O, PATH_L, PATH_R}; // States for mDrvPath

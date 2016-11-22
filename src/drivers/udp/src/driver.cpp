@@ -56,6 +56,21 @@ TDriver::~TDriver()
 void TDriver::InitTrack(PTrack Track, PCarHandle CarHandle, PCarSettings *CarParmHandle, PSituation Situation)
 {
   mTrack = Track;
+  tTrackSeg *first = mTrack->seg;
+  tTrackSeg *curSeg = mTrack->seg;
+  do {
+      if (curSeg->lgfromstart < 0.1) {
+          t3Dd &sl = curSeg->vertex[TR_SL];
+          t3Dd &sr = curSeg->vertex[TR_SR];
+          off.x = (sl.x + sr.x)/2;
+          off.y = (sl.y + sr.y)/2;
+          off.z = (sl.z + sr.z)/2;
+          GfOut("Start line center: %f %f %f\n", off.x, off.y, off.z);
+          break;
+      }
+      curSeg = curSeg->next;
+  } while (curSeg != first);
+
   mTankvol = GfParmGetNum(CarHandle, SECT_CAR, PRM_TANK, (char*)NULL, 50);
 
   // Get file handles
@@ -342,9 +357,13 @@ void TDriver::setControls(int index)
 	SendBuf.append( (const char*) &oCar[index]->_wheelSpinVel(1),  sizeof(float));//36
 	SendBuf.append( (const char*) &oCar[index]->_wheelSpinVel(2),  sizeof(float));//40
 	SendBuf.append( (const char*) &oCar[index]->_wheelSpinVel(3),  sizeof(float));//44
-	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.x,  sizeof(float));//48
-	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.y,  sizeof(float));//52
-	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.z,  sizeof(float));//56
+
+	tPosd &pos( oCar[index]->pub.DynGCg.pos );
+	float abs_x = pos.x-off.x, abs_y = pos.y-off.y, abs_z = pos.z-off.z;
+	SendBuf.append( (const char*) &abs_x,  sizeof(float));//48
+	SendBuf.append( (const char*) &abs_y,  sizeof(float));//52
+	SendBuf.append( (const char*) &abs_z,  sizeof(float));//56
+
 	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.ax,  sizeof(float));//60
 	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.ay,  sizeof(float));//64
 	SendBuf.append( (const char*) &oCar[index]->pub.DynGCg.pos.az,  sizeof(float));//68
